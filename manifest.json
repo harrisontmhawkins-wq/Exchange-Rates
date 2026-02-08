@@ -1,7 +1,7 @@
 {
   "name": "Exchange Rates",
   "short_name": "FX Rates",
-  "start_url": "Exchange-Rates.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
