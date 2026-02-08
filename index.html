@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Exchange Rates</title>
+  <title>Neon FX Converter</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- PWA manifest -->
@@ -11,17 +11,24 @@
   <!-- Service worker -->
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("SW registered"))
-        .catch(err => console.log("SW error:", err));
+      navigator.serviceWorker.register("service-worker.js");
     }
   </script>
 
   <style>
+    :root {
+      --bg: #050816;
+      --card: #0b1020;
+      --accent: #4ade80;
+      --accent2: #60a5fa;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+
     body {
-      background: #0a0a0a;
-      color: white;
-      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 60%, #000 100%);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
       margin: 0;
       padding: 20px;
       display: flex;
@@ -30,94 +37,123 @@
 
     .app {
       width: 100%;
-      max-width: 500px;
-      background: #111;
-      padding: 20px;
-      border-radius: 12px;
-      border: 1px solid #333;
+      max-width: 520px;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 22px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 0 40px rgba(0, 255, 150, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glow {
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(74, 222, 128, 0.18), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(96, 165, 250, 0.18), transparent 55%);
+      pointer-events: none;
+      z-index: -1;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
+      font-size: 1.6rem;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 12px rgba(74, 222, 128, 0.6);
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 10px;
+      display: block;
     }
 
     select, input {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: 1px solid #444;
-      background: #1a1a1a;
-      color: white;
+      margin-top: 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
       font-size: 1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
     }
 
     button {
       width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 8px;
+      padding: 12px;
+      margin-top: 14px;
+      border-radius: 12px;
       border: none;
-      background: #22c55e;
-      color: black;
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+      color: #022c22;
       font-size: 1rem;
       font-weight: bold;
       cursor: pointer;
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+      transition: 0.15s;
     }
 
-    .rate-box {
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.7);
+    }
+
+    .box {
       margin-top: 20px;
-      padding: 15px;
-      background: #1a1a1a;
-      border-radius: 10px;
-      border: 1px solid #333;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow: 0 0 20px rgba(96, 165, 250, 0.15);
     }
 
     .big {
-      font-size: 2rem;
+      font-size: 2.2rem;
       font-weight: bold;
+      text-shadow: 0 0 12px rgba(96, 165, 250, 0.6);
     }
 
     .small {
       font-size: 0.9rem;
-      color: #aaa;
+      color: var(--muted);
+      margin-top: 4px;
     }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <h1>Exchange Rates</h1>
+    <div class="glow"></div>
 
-    <label>Choose currency:</label>
-    <select id="currency-select">
-      <option value="GBP">GBP – British Pound</option>
-      <option value="EUR">EUR – Euro</option>
-      <option value="JPY">JPY – Japanese Yen</option>
-      <option value="CAD">CAD – Canadian Dollar</option>
-      <option value="AUD">AUD – Australian Dollar</option>
-      <option value="CHF">CHF – Swiss Franc</option>
-      <option value="INR">INR – Indian Rupee</option>
-      <option value="CNY">CNY – Chinese Yuan</option>
-      <option value="BRL">BRL – Brazilian Real</option>
-      <option value="ZAR">ZAR – South African Rand</option>
-    </select>
+    <h1>Neon FX Converter</h1>
 
-    <button id="refresh-btn">Refresh Now</button>
+    <label>From currency:</label>
+    <select id="from-select"></select>
 
-    <div class="rate-box">
-      <div class="big" id="rate-value">—</div>
-      <div class="small" id="rate-sub">1 USD = ?</div>
-      <div class="small" id="last-updated">Last update: —</div>
-    </div>
+    <label>To currency:</label>
+    <select id="to-select"></select>
 
-    <div class="rate-box">
-      <label>Enter USD amount:</label>
-      <input id="amount-input" type="number" placeholder="Enter amount in USD">
+    <label>Amount:</label>
+    <input id="amount-input" type="number" placeholder="Enter amount">
 
+    <button id="swap-btn">Swap Currencies</button>
+
+    <div class="box">
       <div class="big" id="converted-value">—</div>
       <div class="small" id="converted-sub">Converted amount</div>
+      <div class="small" id="last-updated">Last update: —</div>
     </div>
   </div>
 
@@ -125,74 +161,69 @@
     const API_URL = "https://open.er-api.com/v6/latest/USD";
     const REFRESH_INTERVAL_MS = 10000;
 
-    const rateValueEl = document.getElementById("rate-value");
-    const rateSubEl = document.getElementById("rate-sub");
-    const lastUpdatedEl = document.getElementById("last-updated");
-    const currencySelectEl = document.getElementById("currency-select");
-    const refreshBtnEl = document.getElementById("refresh-btn");
+    const fromSelect = document.getElementById("from-select");
+    const toSelect = document.getElementById("to-select");
+    const amountInput = document.getElementById("amount-input");
+    const convertedValue = document.getElementById("converted-value");
+    const convertedSub = document.getElementById("converted-sub");
+    const lastUpdated = document.getElementById("last-updated");
+    const swapBtn = document.getElementById("swap-btn");
 
-    const amountInputEl = document.getElementById("amount-input");
-    const convertedValueEl = document.getElementById("converted-value");
-    const convertedSubEl = document.getElementById("converted-sub");
+    let rates = null;
 
-    let lastData = null;
+    function populateDropdowns() {
+      const currencies = Object.keys(rates);
 
-    function formatTime(date) {
-      return date.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
+      currencies.forEach(cur => {
+        const opt1 = document.createElement("option");
+        const opt2 = document.createElement("option");
+        opt1.value = opt2.value = cur;
+        opt1.textContent = opt2.textContent = cur;
+        fromSelect.appendChild(opt1);
+        toSelect.appendChild(opt2);
       });
+
+      fromSelect.value = "USD";
+      toSelect.value = "GBP";
     }
 
     async function fetchRates() {
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-
-        if (data.result !== "success") throw new Error("API error");
-
-        lastData = data;
-        updateUI();
-      } catch (err) {
-        rateValueEl.textContent = "Error";
-        rateSubEl.textContent = "Could not load rates";
-      }
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      rates = data.rates;
+      lastUpdated.textContent = "Last update: " + new Date().toLocaleTimeString();
+      if (fromSelect.length === 0) populateDropdowns();
+      convert();
     }
 
-    function updateUI() {
-      if (!lastData) return;
+    function convert() {
+      const from = fromSelect.value;
+      const to = toSelect.value;
+      const amount = parseFloat(amountInput.value);
 
-      const currency = currencySelectEl.value;
-      const rate = lastData.rates[currency];
-
-      rateValueEl.textContent = rate.toFixed(4);
-      rateSubEl.textContent = `1 USD = ${rate.toFixed(4)} ${currency}`;
-      lastUpdatedEl.textContent = "Last update: " + formatTime(new Date());
-
-      updateConversion();
-    }
-
-    function updateConversion() {
-      const amount = parseFloat(amountInputEl.value);
-      const currency = currencySelectEl.value;
-
-      if (!lastData || isNaN(amount)) {
-        convertedValueEl.textContent = "—";
-        convertedSubEl.textContent = "Converted amount";
+      if (!rates || isNaN(amount)) {
+        convertedValue.textContent = "—";
+        convertedSub.textContent = "Converted amount";
         return;
       }
 
-      const rate = lastData.rates[currency];
-      const converted = amount * rate;
+      const usdAmount = amount / rates[from];
+      const finalAmount = usdAmount * rates[to];
 
-      convertedValueEl.textContent = converted.toFixed(2);
-      convertedSubEl.textContent = `${amount} USD = ${converted.toFixed(2)} ${currency}`;
+      convertedValue.textContent = finalAmount.toFixed(2);
+      convertedSub.textContent = `${amount} ${from} = ${finalAmount.toFixed(2)} ${to}`;
     }
 
-    amountInputEl.addEventListener("input", updateConversion);
-    currencySelectEl.addEventListener("change", updateUI);
-    refreshBtnEl.addEventListener("click", fetchRates);
+    swapBtn.addEventListener("click", () => {
+      const temp = fromSelect.value;
+      fromSelect.value = toSelect.value;
+      toSelect.value = temp;
+      convert();
+    });
+
+    fromSelect.addEventListener("change", convert);
+    toSelect.addEventListener("change", convert);
+    amountInput.addEventListener("input", convert);
 
     fetchRates();
     setInterval(fetchRates, REFRESH_INTERVAL_MS);
